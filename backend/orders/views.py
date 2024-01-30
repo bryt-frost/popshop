@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Order, OrderItem
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, PaymentSerializer
 from cart.models import CartItem, Cart
 
 from django.db import transaction
@@ -17,6 +17,7 @@ class RetrieveOrders(generics.ListAPIView):
     def get_queryset(self):
         profile = self.request.user.profile
         return Order.objects.filter(user=profile)
+
 
 class CreateOrderView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -54,3 +55,14 @@ class CreateOrderView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+
+class InitializePaymentView(generics.CreateAPIView):
+    def post(self, request, *args, **kwargs):
+        serializer = PaymentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

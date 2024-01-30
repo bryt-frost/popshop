@@ -47,10 +47,7 @@ const CartPage = () => {
             <CartItem key={item.product.id} {...item} />
           ))}
         </div>
-        <div className='border-t border-gray-300'>
-          {' '}
-          <button onClick={placeOrder} className='bg-blue-500'>order</button>
-        </div>
+
       </div>
 
       <ShippingInfo total={total} />

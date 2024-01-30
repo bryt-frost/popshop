@@ -1,41 +1,146 @@
-import { FaEye } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 
 import { add_to_cart_api } from '../features/cart/cartSlice';
-import { useEffect } from 'react';
-openModal
 
-import { openModal, } from '../features/modal/modalSlice';
+import { openModal } from '../features/modal/modalSlice';
 
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { MdLocationCity, MdLocationPin } from 'react-icons/md';
+import { Link, useNavigate } from 'react-router-dom';
+import { MdLocationPin } from 'react-icons/md';
+import Swal from 'sweetalert2';
+import { usePaystackPayment } from 'react-paystack';
+import axios from 'axios';
 
 const ShippingInfo = ({ total }) => {
   const dispatch = useDispatch();
-const { authTokens, profile } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const { authTokens, profile } = useSelector((state) => state.auth);
+  const userData = {
+    email: profile?.user.email,
+    phone: profile?.phone_number || '',
+    name: `${profile?.user.first_name} ${profile.user.last_name}`,
+    publicKey: 'pk_test_a7195117e0211a8d30ba80d8516c355d6607a703',
+    // Add other user information as needed
+  };
+  const handleCancel = () => {
+    navigate('/account');
+  };
 
+  const shippingFee = (total * (0.05)).toFixed(2);
+  const allTotal = (Number(total) + Number(shippingFee)).toFixed(2);
+  const forPaystack = Math.ceil(allTotal);
+
+  const componentProps = {
+    email: userData.email,
+    amount: parseInt(forPaystack) * 100,
+    currency: 'GHS',
+    metadata: {
+      name: userData.name,
+      phone: userData.phone,
+    },
+    publicKey: 'pk_test_a7195117e0211a8d30ba80d8516c355d6607a703',
+    reference:''
+
+  };
+
+  
+
+  const initializePayment = usePaystackPayment(componentProps);
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.onmouseenter = Swal.stopTimer;
+      toast.onmouseleave = Swal.resumeTimer;
+    },
+  });
+
+  const onSuccess = (response) => {
+    console.log(response);
+    Toast.fire({
+      icon: 'success',
+      background: '#53b96a',
+      titleText: 'Payment successfully completed',
+      color:'#fff'
+    });
+  };
+
+  const onClose = (error) => {
+    Toast.fire({
+      icon: 'warning',
+      background: '#f3c175',
+      titleText: 'Payment not completed',
+            color:'#fff'
+    });
+  };
+
+  const handlePayment = () => {
+    // Call the initializePayment function and handle the promise
+    axios.post(url, data)
+      .then((response) => {
+        console.log('POST request successful:', response.data);
+      })
+      .catch((error) => {
+        console.error('Error making POST request:', error);
+      });
+    initializePayment({onSuccess, onClose});
+  };
+
+  const handleUserConfirmation = () => {
+    const swalWithTailwindButtons = Swal.mixin({
+      customClass: {
+        confirmButton:
+          'ml-4 bg-green-500 text-white border border-green-500 py-2 px-6 focus:outline-none hover:bg-green-600 rounded text-lg',
+        cancelButton:
+          'text-black py-2 px-6 focus:outline-none hover:bg-red-400 hover:text-white rounded text-lg border border-red-400',
+      },
+
+      buttonsStyling: false,
+    });
+
+    swalWithTailwindButtons
+      .fire({
+        title: 'User Confirmation',
+        html: `
+      <div class="text-left">
+        <p class="text-gray-700 mb-2"><strong>Email:</strong> ${userData.email}</p>
+      
+        <p class="text-gray-700 mb-2"><strong>Phone:</strong> ${userData.phone}</p>
+        <p class="text-gray-700 mb-2 "><strong>Name:</strong> ${userData.name}</p>
+
+      </div>
+    `,
+        icon: 'question',
+        showCancelButton: true,
+        showCloseButton: true,
+        confirmButtonText: 'Yes, proceed!',
+        cancelButtonText: 'No, Edit It!',
+        reverseButtons: true,
+      })
+      .then((result) => {
+        if (result.isConfirmed) {
+          handlePayment();
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          handleCancel();
+        }
+      });
+  };
 
   const handleAddToCartApi = async () => {
     try {
-      dispatch(add_to_cart_api(/* pass necessary parameters here */));
-      // After successfully adding to cart, trigger getCartItems
-     // await dispatch(getCartItems());
-
+      dispatch(add_to_cart_api());
+      handleUserConfirmation();
     } catch (error) {
       console.error('Error adding to cart:', error);
-      // Handle the error
     }
   };
 
-useEffect(() => {
-
-}, [dispatch]);
-
-  
   const handleViewOnMap = () => {
     // Replace with the actual coordinates or address
-    const loc  =   profile.suggested_drop_points?.[0]
+    const loc = profile.suggested_drop_points?.[0];
     const location = `${loc.city}-${loc.name}`;
 
     // Create the Google Maps URL
@@ -44,63 +149,6 @@ useEffect(() => {
     )}`;
     window.open(googleMapsUrl, '_blank');
   };
-  // return (
-  //   <div className='w-full rounded-md mb-4 shadow-md'>
-  //     <div className='mx-4 rounded-t-md py-2 '>
-  //       <h3 className='text-left text-xl font-bold'>Shipping Information</h3>
-  //     </div>
-
-  //     <div className='p-4 text-[1rem] '>
-  //       <div className='uppercase'>
-  //         <div className='flex gap-3 border-b mb-2 border-gray-500'>
-  //           <span className='font-bold '>Country:</span>
-  //           <span>Ghana</span>
-  //         </div>
-  //         <div className='flex gap-3 border-b mb-2 border-gray-500'>
-  //           <span className='font-bold'>Region:</span>
-  //           <span>Volta Region</span>
-  //         </div>
-  //         <div className='flex gap-3 border-b border-gray-500 mb-2'>
-  //           <span className='font-bold'>City:</span>
-  //           <span>Aflao</span>
-  //         </div>
-  //         <div className='flex gap-3 border-b border-gray-500 mb-2 items-center'>
-  //           <span className='font-bold'>Pick-up Station:</span>
-  //           <span>Glory Ventures - boarder</span>
-
-  //           <FaEye className=' text-blue-500 px-0' size={25} />
-  //         </div>
-  //       </div>
-  //       <button className='text-blue-500 px-0'>
-  //         Select Another Pick-up Station
-  //       </button>
-  //     </div>
-  //     <div className=' rounded-t-md  mx-4'>
-  //       <h3 className='text-left text-xl font-bold'>Payment Information</h3>
-  //       <hr />
-  //     </div>
-  //     <div className='m-4'>
-  //       <div className='p-10'>
-  //         <div className='flex justify-between items-center '>
-  //           <h2>Total</h2>
-  //           <span>GHC {total.toFixed(2)}</span>
-  //         </div>
-  //         <div className='mt-4 flex justify-between mx-auto'>
-  //           <button
-  //             onClick={() => dispatch(openModal())}
-  //             className='  bg-transparent shadow-sm rounded-full hover:bg-red-500 hover:text-white active:bg-red-600 transition duration-150 active:shadow-xl '>
-  //             Clear cart
-  //           </button>{' '}
-  //           <button
-  //             onClick={handleAddToCartApi}
-  //             className=' bg-amber-400 text-white shadow-sm rounded-full hover:bg-amber-500 active:bg-amber-600 transition duration-150 active:shadow-xl hover:outline-1 '>
-  //             Continue
-  //           </button>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
 
   return (
     <div className='w-full rounded-md mb-4 shadow-md'>
@@ -173,31 +221,27 @@ useEffect(() => {
         <div className='p-4'>
           <div className='flex justify-between items-center text-lg'>
             <h3>Shipping fee</h3>
-            <span className='text-gray-600'>
-              GHC {(total * 0.05).toFixed(2)}
-            </span>
+            <span className='text-gray-600'>GHC {shippingFee}</span>
           </div>
-          <div className='flex justify-between items-center text-lg font-semibold'>
+          <div className='text-lg flex  justify-between items-center font-semibold'>
             <h2>Total</h2>
-            <span className='text-green-600'>
-              GHC {(total + total * 0.05).toFixed(2)}
-            </span>
+            <span className='text-green-600'>GHC {allTotal}</span>
           </div>
-          <div className='mt-4 flex justify-between mx-auto'>
-            <button
-              onClick={() => dispatch(openModal())}
-              className='bg-transparent text-red-500 border border-red-500 px-6 py-2 rounded-full hover:bg-red-500 hover:text-white focus:outline-none transition duration-300'>
-              Clear Cart
-            </button>
+          <div className='mt-4 flex items-center flex-wrap justify-between mx-auto gap-2'>
             {authTokens ? (
               <button
                 onClick={handleAddToCartApi}
-                className='bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 focus:outline-none transition duration-300'>
-                Continue
+                className='bg-amber-500 text-white px-6 py-2 rounded-none hover:bg-amber-600 w-full focus:outline-none transition duration-300'>
+                Proceed to Payment
               </button>
             ) : (
               ''
             )}
+            <button
+              onClick={() => dispatch(openModal())}
+              className='bg-transparent text-red-500 border border-red-500 px-6 py-2 rounded-none w-full hover:bg-red-500 hover:text-white focus:outline-none transition duration-300'>
+              Clear Cart
+            </button>
           </div>
         </div>
       </div>

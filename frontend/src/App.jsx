@@ -20,6 +20,7 @@ import SetPassword from './screens/SetPassword';
 import ProductsInCategory from './screens/ProductsInCategory';
 import AccountPage from './screens/AccountPage';
 import OrderTracking from './screens/Orders';
+import PaymentPage from './screens/PaymentPage';
 
 function App() {
   // const location = useResolvedPath();
@@ -77,6 +78,7 @@ function App() {
           <Route path='/dashboard' element={<DashboardPage />} />
           <Route path='/account' element={<AccountPage />} />
           <Route path='/orders' element={<OrderTracking />} />
+          <Route path='/payment-page' element={<PaymentPage />} />
         </Route>
         <Route path='/products/:product_id' element={<ProductDetailPage />} />
         <Route path='/categories/:id' element={<ProductsInCategory />} />

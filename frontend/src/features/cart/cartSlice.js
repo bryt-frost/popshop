@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 import useAxios from '../../common/hooks/useAxios';
 import { useDispatch } from 'react-redux';
+import { extractErrorMessage } from '../../common/utils/extractErrorMessage';
 
 const url = 'cart';
 
@@ -99,7 +100,7 @@ export const destroy_cart_item = createAsyncThunk(
       const resp = await axiosInstance.delete(url + `/destroy-cart-item/${_} `);
       return resp.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+      return thunkAPI.rejectWithValue(extractErrorMessage(error));
     }
   },
 );
