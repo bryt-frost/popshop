@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  button {
+    @apply rounded-xl px-5 py-1;
+  }
+
+  /* body{
+        @apply  sm:mx-2 md:mx-2 lg:mx-2
+    } */
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+
