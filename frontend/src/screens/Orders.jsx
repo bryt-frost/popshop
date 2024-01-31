@@ -7,7 +7,7 @@ import {
   BiArrowFromTop,
 } from 'react-icons/bi';
 import { FiRefreshCw, FiTruck } from 'react-icons/fi';
-import { MdPending } from 'react-icons/md';
+import { MdLocationPin, MdPending } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import { baseURL } from '../common/baseAPI';
 import dayjs from 'dayjs';
@@ -16,7 +16,7 @@ import useAxios from '../common/hooks/useAxios';
 const OrderTracking = () => {
   const dispatch = useDispatch();
   const [resp, setResp] = useState([]);
-  const { authTokens } = useSelector((state) => state.auth);
+  const { authTokens, profile } = useSelector((state) => state.auth);
   useEffect(() => {
     const postData = async () => {
       const url = baseURL + 'orders';
@@ -69,10 +69,20 @@ const OrderTracking = () => {
 
     return isActive ? 'bg-blue-500' : 'bg-gray-300';
   };
+  const handleViewOnMap = () => {
+    // Replace with the actual coordinates or address
+    const loc = profile.suggested_drop_points?.[0];
+    const location = `${loc.city}-${loc.name}`;
 
+    // Create the Google Maps URL
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      location,
+    )}`;
+    window.open(googleMapsUrl, '_blank');
+  };
   return (
-    <div className='flex flex-col md:flex-row justify-between  bg-gray-100'>
-      <div className=' p-4 bg-white  shadow-md w-full'>
+    <div className='flex flex-col md:flex-row flex-grow-0 bg-gray-100'>
+      <div className='w-full md:w-[70%] p-4 bg-white shadow-md'>
         <div className='justify-between flex items-center'>
           <h2 className='text-2xl font-semibold mb-6 '>Order Tracking</h2>
           <span className='text-2xl font-semibold mb-6 text-gray-300'>
@@ -145,22 +155,38 @@ const OrderTracking = () => {
             </div>
 
             {showDetails[order.id] && (
-              <div className='mt-4 p-4 bg-gray-100 rounded-md'>
-                <p className='font-semibold text-sm'>Products:</p>
+              <div className='bg-white rounded-lg overflow-hidden shadow-lg p-6'>
+                <div className='flex items-center justify-between mb-4'>
+                  <p className='font-semibold text-lg text-gray-800'>
+                    Products:
+                  </p>
+                </div>
                 <ul className='list-disc ml-6 text-gray-700'>
                   {order.items.map((item, index) => (
-                    <li key={index} className='text-xs'>
+                    <li key={index} className='text-sm mb-2'>
                       {item.product.title}
                     </li>
                   ))}
                 </ul>
-                
+                <div className='font-semibold text-sm mt-4'>
+                  <p className='text-gray-700 mb-2'>
+                    Drop Point: {profile?.suggested_drop_points[0].city}
+                  </p>
+                  <button
+                    onClick={handleViewOnMap}
+                    className='text-blue-500 hover:text-blue-700 transition duration-300 flex items-center'>
+                    <MdLocationPin className='text-blue-500 mr-2' size={20} />
+                    View on Map
+                  </button>
+                </div>
               </div>
             )}
           </div>
         ))}
       </div>
-      <div className='md:w-4/6   bg-black'>hello</div>
+      <div className=' flex-grow  bg-black p-4 text-white'>
+        <p className='text-2xl font-semibold mb-4'>Hello</p>
+      </div>
     </div>
   );
 };

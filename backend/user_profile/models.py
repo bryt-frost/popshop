@@ -152,6 +152,9 @@ class DropPoint(TimeStampModel):
     lat = models.CharField(max_length=200, blank=True, null=True)
     info = models.TextField(null=True, blank=True)
 
+    class Meta:
+        ordering = ["-created"]
+
     def __str__(self):
         return self.name
 

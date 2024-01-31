@@ -26,6 +26,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_amount",
             "paid",
             "items",
+            'paid',
         ]
 
 

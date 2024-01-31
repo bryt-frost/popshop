@@ -1,14 +1,14 @@
-# your_app/views.py
-from rest_framework import status
-from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from .models import Order, OrderItem
-from .serializers import OrderSerializer, PaymentSerializer
-from cart.models import CartItem, Cart
-
+from django.shortcuts import get_object_or_404
+from cart.models import Cart, CartItem
 from django.db import transaction
+from rest_framework import generics, permissions, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from .models import Order, OrderItem, Payment
+from .serializers import OrderSerializer, PaymentSerializer
+from user_profile.models import DropPoint
 
 class RetrieveOrders(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -34,12 +34,15 @@ class CreateOrderView(generics.CreateAPIView):
                 return Response(
                     {"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST
                 )
+            drop_point = DropPoint.objects.get(id=self.request.data['id'])
 
             total_amount = sum(
                 item.product.price * item.quantity for item in cart_items
             )
 
-            order = Order.objects.create(user=user, total_amount=total_amount)
+            order = Order.objects.create(
+                user=user, total_amount=total_amount, paid=True, drop_point=drop_point
+            )
 
             for cart_item in cart_items:
                 OrderItem.objects.create(
@@ -58,11 +61,29 @@ class CreateOrderView(generics.CreateAPIView):
 
 
 class InitializePaymentView(generics.CreateAPIView):
-    def post(self, request, *args, **kwargs):
-        serializer = PaymentSerializer(data=request.data)
+    serializer_class = PaymentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyPaymentAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, ref):
+        payment = get_object_or_404(Payment, ref=ref)
+        verified = payment.verify_payment()
+
+        if verified:
+            return Response(
+                {"detail": "Verification Successful"}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"detail": "Verification Failed"}, status=status.HTTP_400_BAD_REQUEST
+            )

@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 
-import { add_to_cart_api } from '../features/cart/cartSlice';
+import { add_to_cart_api, clearCart } from '../features/cart/cartSlice';
 
 import { openModal } from '../features/modal/modalSlice';
 
@@ -9,7 +9,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MdLocationPin } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import { usePaystackPayment } from 'react-paystack';
-import axios from 'axios';
+
+import { baseURL } from '../common/baseAPI';
+import useAxios from '../common/hooks/useAxios';
 
 const ShippingInfo = ({ total }) => {
   const dispatch = useDispatch();
@@ -19,14 +21,16 @@ const ShippingInfo = ({ total }) => {
     email: profile?.user.email,
     phone: profile?.phone_number || '',
     name: `${profile?.user.first_name} ${profile.user.last_name}`,
+    suggested_drop_points: profile?.suggested_drop_points[0] || [],
     publicKey: 'pk_test_a7195117e0211a8d30ba80d8516c355d6607a703',
     // Add other user information as needed
   };
+  console.log(userData);
   const handleCancel = () => {
     navigate('/account');
   };
 
-  const shippingFee = (total * (0.05)).toFixed(2);
+  const shippingFee = (total * 0.05).toFixed(2);
   const allTotal = (Number(total) + Number(shippingFee)).toFixed(2);
   const forPaystack = Math.ceil(allTotal);
 
@@ -39,11 +43,7 @@ const ShippingInfo = ({ total }) => {
       phone: userData.phone,
     },
     publicKey: 'pk_test_a7195117e0211a8d30ba80d8516c355d6607a703',
-    reference:''
-
   };
-
-  
 
   const initializePayment = usePaystackPayment(componentProps);
   const Toast = Swal.mixin({
@@ -59,34 +59,83 @@ const ShippingInfo = ({ total }) => {
   });
 
   const onSuccess = (response) => {
-    console.log(response);
-    Toast.fire({
-      icon: 'success',
-      background: '#53b96a',
-      titleText: 'Payment successfully completed',
-      color:'#fff'
-    });
-  };
+    const url = baseURL + 'orders/pay/';
+    const ref = response.reference || '';
 
+    const data = {
+      email: componentProps.email,
+      amount: forPaystack,
+      ref: ref,
+    };
+
+    const axiosInstance = useAxios({ authTokens, dispatch });
+    axiosInstance
+      .post(url, data)
+      .then((response) => {
+        if (response.status === 201) {
+          axiosInstance
+            .get(baseURL + 'orders/pay/verify/' + ref)
+            .then((resp) => {
+              if (resp.status === 200) {
+                Toast.fire({
+                  icon: 'success',
+                  background: '#78C07C',
+
+                  titleText: resp.data.detail,
+                  color: '#fff',
+                });
+                axiosInstance
+                  .post(
+                    baseURL + 'orders/create-order/',
+                    userData.suggested_drop_points,
+                  )
+                  .then((res) => {
+                    if (res.status === 201) {
+                      Toast.fire({
+                        icon: 'success',
+                        background: '#78C07C',
+                        titleText: 'Order created',
+                        color: '#fff',
+                      });
+                      dispatch(clearCart());
+                    }
+                  })
+                  .catch((err) => {
+                    Toast.fire({
+                      background: '#FFD54F',
+                      titleText: 'The order could not be created',
+                      color: '#FFFFFF',
+                    });
+                  });
+              }
+            })
+            .catch((err) => {
+              Toast.fire({
+                background: '#FFD54F',
+                titleText: err.response.data.detail,
+                color: '#FFFFFF',
+              });
+            });
+        }
+      })
+      .catch((error) => {
+        Toast.fire({
+          background: '#FFD54F',
+          titleText: response.error,
+          color: '#FFFFFF',
+        });
+      });
+  };
   const onClose = (error) => {
     Toast.fire({
-      icon: 'warning',
-      background: '#f3c175',
-      titleText: 'Payment not completed',
-            color:'#fff'
+      background: '#FFD54F',
+      titleText: 'Payment cancelled',
+      color: '#FFFFFF',
     });
   };
 
   const handlePayment = () => {
-    // Call the initializePayment function and handle the promise
-    axios.post(url, data)
-      .then((response) => {
-        console.log('POST request successful:', response.data);
-      })
-      .catch((error) => {
-        console.error('Error making POST request:', error);
-      });
-    initializePayment({onSuccess, onClose});
+    initializePayment({ onSuccess, onClose });
   };
 
   const handleUserConfirmation = () => {
@@ -105,13 +154,11 @@ const ShippingInfo = ({ total }) => {
       .fire({
         title: 'User Confirmation',
         html: `
-      <div class="text-left">
-        <p class="text-gray-700 mb-2"><strong>Email:</strong> ${userData.email}</p>
-      
-        <p class="text-gray-700 mb-2"><strong>Phone:</strong> ${userData.phone}</p>
-        <p class="text-gray-700 mb-2 "><strong>Name:</strong> ${userData.name}</p>
-
-      </div>
+<div class="text-left">
+  <p class="text-gray-700 mb-2"><strong>Email:</strong> ${userData.email}</p>
+  <p class="text-gray-700 mb-2"><strong>Phone:</strong> ${userData.phone}</p>
+  <p class="text-gray-700 mb-2"><strong>Name:</strong> ${userData.name}</p>
+</div>
     `,
         icon: 'question',
         showCancelButton: true,
@@ -188,7 +235,7 @@ const ShippingInfo = ({ total }) => {
                   <span className='text-gray-400 lowercase'>
                     This drop point is based on your current address
                   </span>
-                  <Link className='text-blue-500 mx-2 hover:underline' to={'/'}>
+                  <Link className='text-blue-500 mx-2 hover:underline' to={'/account'}>
                     Change address
                   </Link>
                   {/* Drop Point Map Link */}
@@ -205,10 +252,15 @@ const ShippingInfo = ({ total }) => {
           </div>
         </div>
       ) : (
-        <p>
-          {' '}
-          <Link to={'login'}>Login to proceed.</Link>
-        </p>
+        <div className='text-sm p-4 border border-gray-200 rounded-lg mx-4 mt-4'>
+          <Link className='text-blue-500' to={'login'}>
+            Login to proceed.
+          </Link>
+          <p>Check that you have completed setting up your profile. </p>
+          <Link className='text-blue-500' to={'/account'}>
+            Click here to go to profile
+          </Link>
+        </div>
       )}
 
       <div className='mx-4'>
@@ -228,14 +280,14 @@ const ShippingInfo = ({ total }) => {
             <span className='text-green-600'>GHC {allTotal}</span>
           </div>
           <div className='mt-4 flex items-center flex-wrap justify-between mx-auto gap-2'>
-            {authTokens ? (
+            {authTokens ?(
               <button
                 onClick={handleAddToCartApi}
                 className='bg-amber-500 text-white px-6 py-2 rounded-none hover:bg-amber-600 w-full focus:outline-none transition duration-300'>
                 Proceed to Payment
               </button>
             ) : (
-              ''
+              <Link to={'/login'} />
             )}
             <button
               onClick={() => dispatch(openModal())}

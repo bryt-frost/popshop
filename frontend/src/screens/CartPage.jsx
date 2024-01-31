@@ -4,16 +4,12 @@ import { useSelector } from 'react-redux';
 
 import ShippingInfo from './ShippingInfo';
 import CartItem from './../components/CartItem';
-import { baseURL } from '../common/baseAPI';
 
 
 const CartPage = () => {
 
   const { amount, cartItems, total } = useSelector((state) => state.cart);
-  const placeOrder=()=>{
-     const response = axios.post(baseURL + 'order', userData);
 
-  }
 
   if (amount < 1) {
     return (
