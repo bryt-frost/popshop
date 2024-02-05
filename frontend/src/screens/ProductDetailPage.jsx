@@ -42,51 +42,52 @@ Toast.fire({
 
   };
   return (
-    <div className={`w-full ${!isOpen ? '' : 'fixed h-screen bottom-0'}`}>
-      <Product product={product} />
-      <div className='mb-3'>
-        <Reviews />
-      </div>
+    <div>
+      <div className={`w-full md:px-8 px-4 ${!isOpen ? '' : 'fixed h-screen bottom-0'}`}>
+        <Product product={product} />
+        <div className='mb-3'>
+          <Reviews />
+        </div>
 
-      <div className='fixed bottom-0 left-0 right-0  bg-white justify-center items-center text-center flex md:mx-[30%] p-4 rounded-full mt-4 shadow-md'>
-        {authTokens && (
-          <button
-            onClick={handleAddToFavorite}
-            className='m-0 hover:text-amber-500 active:border-amber-600 active:border'>
-            <BsHeart
+        <div className='fixed bottom-0 left-0 right-0  bg-white justify-center items-center text-center flex md:mx-[30%] p-4 rounded-full mt-4 shadow-md'>
+          {authTokens && (
+            <button
+              onClick={handleAddToFavorite}
+              className='m-0 hover:text-amber-500 active:border-amber-600 active:border'>
+              <BsHeart
+                className='inline text-amber-400 shadow-sm rounded-md'
+                size={30}
+              />
+            </button>
+          )}
+
+          <div className='flex-1 md:w-full'>
+            {isProductInCart ? (
+              <Add_Remove
+                cartItem={cartItem}
+                item={product}
+                className='bg-amber-400 text-white shadow-sm rounded-s-full hover:bg-amber-500 active:bg-amber-600 transition duration-150 active:shadow-xl px-8 p-3 w-[30%] md:w-[50%]'
+                className2='bg-amber-400 text-white shadow-sm rounded-e-full  hover:bg-amber-500 active:bg-amber-600 transition duration-150 active:shadow-xl px-8 p-3 w-[30%] md:w-[50%]'
+              />
+            ) : (
+              <button
+                onClick={() => {
+                  dispatch(addToCart(product));
+                }}
+                className='bg-amber-400 text-white shadow-sm rounded-md hover:bg-amber-500 active:bg-amber-600 transition duration-150 active:shadow-xl p-3 w-[80%] md:w-[100%]'>
+                Add to Cart
+              </button>
+            )}
+          </div>
+
+          <button className='hover:text-amber-500 active:border-amber-600 active:border inline'>
+            <BsShareFill
               className='inline text-amber-400 shadow-sm rounded-md'
               size={30}
             />
           </button>
-        )}
-
-        <div className='flex-1 md:w-full'>
-          {isProductInCart ? (
-            <Add_Remove
-              cartItem={cartItem}
-              item={product}
-              className='bg-amber-400 text-white shadow-sm rounded-s-full hover:bg-amber-500 active:bg-amber-600 transition duration-150 active:shadow-xl px-8 p-3 w-[30%] md:w-[50%]'
-              className2='bg-amber-400 text-white shadow-sm rounded-e-full  hover:bg-amber-500 active:bg-amber-600 transition duration-150 active:shadow-xl px-8 p-3 w-[30%] md:w-[50%]'
-            />
-          ) : (
-            <button
-              onClick={() => {
-                dispatch(addToCart(product));
-              }}
-              className='bg-amber-400 text-white shadow-sm rounded-md hover:bg-amber-500 active:bg-amber-600 transition duration-150 active:shadow-xl p-3 w-[80%] md:w-[100%]'>
-              Add to Cart
-            </button>
-          )}
         </div>
-
-        <button className='hover:text-amber-500 active:border-amber-600 active:border inline'>
-          <BsShareFill
-            className='inline text-amber-400 shadow-sm rounded-md'
-            size={30}
-          />
-        </button>
       </div>
-
       <Footer />
       <Chat />
     </div>

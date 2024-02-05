@@ -49,7 +49,7 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
   return (
-    <nav className='max-w-full flex justify-between items-center py-4  border-b-2 bg-white'>
+    <nav className='max-w-full flex justify-between items-center py-4 px-2  border-b-2 bg-white'>
       <div className='flex items-center'>
         <FaCartArrowDown className='text-orange-500 text-[20px] md:text-[30px] sm:text-[40px]' />
         <Link

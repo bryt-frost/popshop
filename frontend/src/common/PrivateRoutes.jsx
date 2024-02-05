@@ -7,11 +7,4 @@ const PrivateRoutes = () => {
 };
 export default PrivateRoutes;
 
-// const PrivateRoutes = ({ children, ...rest }) => {
-//   let { authTokens } = useSelector((state)=> state.auth);
-//   if (!authTokens) {
-//     return <Navigate to={'/login'} {...rest}></Navigate>;
-//   }
-//   return children;
-// };
-// export default PrivateRoutes;
+

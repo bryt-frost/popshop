@@ -4,13 +4,13 @@ import { calculateTotals, getCartItems } from './features/cart/cartSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Modal from './components/Modal';
 import { Route, Routes, useLocation, useResolvedPath } from 'react-router-dom';
-import Home from './screens/Home';
+
 import CartPage from './screens/CartPage';
 import ProductDetailPage from './screens/productDetailPage';
 import LoginPage from './screens/LoginPage';
 import PrivateRoutes from './common/PrivateRoutes';
 import RegistrationPage from './screens/RegistrationPage';
-import DashboardPage from './screens/DashboardPage';
+
 import { jwtDecode } from 'jwt-decode';
 import dayjs from 'dayjs';
 import { logout, perform_logout } from './features/auth/authSlice';
@@ -21,7 +21,13 @@ import ProductsInCategory from './screens/ProductsInCategory';
 import AccountPage from './screens/AccountPage';
 import OrderTracking from './screens/Orders';
 import PaymentPage from './screens/PaymentPage';
-
+import DashboardPage from './screens/dashboard/pagesaa/DashboardPage';
+import Settings from './screens/dashboard/parials/Settings';
+import Analytics from './screens/dashboard/parials/Analytics';
+import Home from './screens/Home';
+import HomeDash from './screens/dashboard/parials/Home';
+import OrderManagement from './screens/dashboard/parials/OrderManagement';
+import ProductManagement from './screens/dashboard/parials/ProductManagement';
 function App() {
   // const location = useResolvedPath();
   const location = useLocation();
@@ -51,21 +57,23 @@ function App() {
       dispatch(getCartItems(''));
     }
   }, [authTokens]);
+const excludedPaths = [
+  '/login',
+  '/reset-password',
+  '/admin',
+  '/admin/settings',
+  '/admin/analytics',
+  '/admin/order-management',
+  '/admin/product-management',
+  '/register',
+];
 
-  const login = '/login';
-  const resetPass = '/reset-password';
-  const setPass = '/set-password/';
-  const register = '/register';
-
-  const shouldRenderNavbar =
-    location.pathname !== login &&
-    location.pathname !== resetPass &&
-    location.pathname !== register &&
-    !location.pathname.startsWith(setPass);
+const shouldRenderNavbar =
+  !excludedPaths.includes(location.pathname) &&
+  !location.pathname.startsWith('/set-password');
 
   return (
-    <div className='px-2'>
-      
+    <>
       {shouldRenderNavbar && <Navbar />}
 
       {isOpen && <Modal />}
@@ -75,7 +83,13 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/cart' element={<CartPage />} />
         <Route element={<PrivateRoutes />}>
-          <Route path='/dashboard' element={<DashboardPage />} />
+          <Route path='/admin' element={<DashboardPage />}>
+            <Route index element={<HomeDash />} />
+            <Route path='analytics' element={<Analytics />} />
+            <Route path='settings' element={<Settings />} />
+            <Route path='order-management' element={<OrderManagement />} />
+            <Route path='product-management' element={<ProductManagement />} />
+          </Route>
           <Route path='/account' element={<AccountPage />} />
           <Route path='/orders' element={<OrderTracking />} />
           <Route path='/payment-page' element={<PaymentPage />} />
@@ -83,16 +97,13 @@ function App() {
         <Route path='/products/:product_id' element={<ProductDetailPage />} />
         <Route path='/categories/:id' element={<ProductsInCategory />} />
         <Route path={`/search`} element={<SearchPage />} />
- 
+
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegistrationPage />} />
         <Route path='/reset-password' element={<PassResetPage />} />
-        <Route
-          path='/set-password/:uid/:token'
-          element={<SetPassword />}
-        />
+        <Route path='/set-password/:uid/:token' element={<SetPassword />} />
       </Routes>
-    </div>
+    </>
   );
 }
 

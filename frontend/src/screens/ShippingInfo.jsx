@@ -17,6 +17,7 @@ const ShippingInfo = ({ total }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { authTokens, profile } = useSelector((state) => state.auth);
+  console.log(profile);
   const userData = {
     email: profile?.user.email,
     phone: profile?.phone_number || '',
@@ -209,15 +210,15 @@ const ShippingInfo = ({ total }) => {
           <div className='uppercase'>
             <div className='flex items-center justify-between border-b mb-2 border-gray-200'>
               <span className='font-bold'>Country:</span>
-              <span>{profile?.user_address?.country}</span>
+              <span>{profile?.country.name}</span>
             </div>
             <div className='flex items-center justify-between border-b mb-2 border-gray-200'>
               <span className='font-bold'>Region:</span>
-              <span>{profile?.user_address?.region}</span>
+              <span>{profile?.region}</span>
             </div>
             <div className='flex items-center justify-between border-b mb-2 border-gray-200'>
               <span className='font-bold'>City:</span>
-              <span>{profile?.user_address?.city}</span>
+              <span>{profile?.city}</span>
             </div>
             {profile.suggested_drop_points && (
               <div className=' bg-white rounded-md overflow-hidden shadow '>

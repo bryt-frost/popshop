@@ -68,14 +68,17 @@ class DropPointSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user = MyUserProfileSerializer()  # Remove the parentheses here
+    user = MyUserProfileSerializer() 
     country = CountrySerializer(allow_null=True)
     region = serializers.SlugRelatedField(
         slug_field="name", queryset=Region.objects.all(), allow_null=True
     )
+
     city = serializers.SlugRelatedField(
         slug_field="name", queryset=City.objects.all(), allow_null=True
     )
+
+
 
     suggested_drop_points = serializers.SerializerMethodField()
 
